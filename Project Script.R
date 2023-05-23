@@ -51,3 +51,30 @@ show(fit)
 # Access the estimated parameters
 estimated_params <- coef(fit)
 print(estimated_params)
+
+#CRPS
+# Create a vector of observed values
+observed <- c(1.2, 2.3, 0.8, 1.5, 3.1)
+
+# Create a matrix of forecast probabilities
+# Each row represents a different forecast, and each column represents a probability value
+# Replace 'forecast_probs' with your actual forecast probabilities
+forecast_probs <- matrix(c(0.1, 0.3, 0.4, 0.2,
+                           0.2, 0.2, 0.3, 0.3,
+                           0.3, 0.1, 0.2, 0.4,
+                           0.4, 0.3, 0.2, 0.1,
+                           0.1, 0.1, 0.4, 0.4), nrow = 5, byrow = TRUE)
+
+# Calculate the CRPS for each forecast
+crps <- vector("numeric", length = nrow(forecast_probs))
+for (i in 1:nrow(forecast_probs)) {
+  cum_probs <- cumsum(forecast_probs[i, ])
+  crps[i] <- sum((cum_probs - (observed[i] <= cum_probs))^2)
+}
+
+# Calculate the average CRPS
+average_crps <- mean(crps)
+
+# Print the CRPS values
+print(crps)
+print(average_crps)
