@@ -13,7 +13,7 @@ CRPS <- function(x,mean,sigma){
   score <- sigma*(1/sqrt(pi)-2*dnorm(standart_value)-standart_value*(2*pnorm(standart_value)-1))
   return(score)
 }
-commodities <- read.csv('C:/Users/alkim/OneDrive/Documents/GitHub/cs2/commodities.csv')
+commodities <- read.csv('C:\\Users\\Acer\\OneDrive - ADA University\\Documents\\GitHub\\cs2\\commodities.csv')
 commodities$date <- as.Date(commodities$date)
 ####Plotting the time series basic####
 plot(commodities$coal, type = 'l')
