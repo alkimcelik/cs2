@@ -10,15 +10,21 @@ calc_AIC <- function(model){
 }
 CRPS <- function(x,mean,sigma){
   standart_value <- as.numeric((x-mean)/sigma)
-  score <- sigma*(1/sqrt(pi)-2*dnorm(standart_value)-standart_value*(2*pnorm(standart_value)-1))
+  score <- -sigma*(1/sqrt(pi)-2*dnorm(standart_value)-standart_value*(2*pnorm(standart_value)-1))
   return(score)
 }
 commodities <- read.csv('C:/Users/alkim/OneDrive/Documents/GitHub/cs2/commodities.csv')
 commodities$date <- as.Date(commodities$date)
+NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
+oil_ts <- xts(commodities$oil, order.by = commodities$date)
+coal_ts <- xts(commodities$coal, order.by = commodities$date)
 ####Plotting the time series basic####
-plot(commodities$coal, type = 'l')
-plot(commodities$oil, type = 'l')
-plot(commodities$NGas, type = 'l')
+plot.xts(NGas_ts, type = 'l')
+plot.xts(oil_ts, type = 'l')
+plot.xts(coal_ts, type = 'l')
+hist(coal_ts, breaks = 100)
+hist(NGas_ts, breaks = 100)
+hist(oil_ts, breaks = 100)
 ############AUTOCORRELATION###########
 ###First Moments###
 acf(commodities$coal)
@@ -41,15 +47,10 @@ pacf(commodities$NGas**2)
 #PART B (you know from where lol)
 # Install and load the 'rugarch' package
 library(rugarch)
-
+library(ensembleBMA)
 #part b
-
-# Create the xts object
-xts_obj <- xts(commodities$NGas, order.by = commodities$date)
 ### Train datalarini cikardik
-NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
-oil_ts <- xts(commodities$oil, order.by = commodities$date)
-coal_ts <- xts(commodities$coal, order.by = commodities$date)
+
 NGas_ts_train <- NGas_ts[1:2500]
 oil_ts_train <- oil_ts[1:2500]
 coal_ts_train <- coal_ts[1:2500]
@@ -150,42 +151,64 @@ for(i in 1:200){
   CRPS_coal[[i]] <- CRPS(forecast_coal@forecast$seriesFor[i], coef(best_model_coal_fit)[1], sigma(best_model_coal_fit)[1])
 }
 
-#####ITERATIVE FORECASTING WITH REESTIMATION######
+#####ITERATIVE FORECASTING WITHOUT REESTIMATION######
 fitted_forecast_NGas <- list()
 mu_forecast_NGas <- list()
 sigma_forecast_NGas <- list()
+ar_forecast_NGas <- list()
 fitted_forecast_oil <- list()
 mu_forecast_oil <- list()
 sigma_forecast_oil <- list()
+ar_forecast_oil <- list()
 fitted_forecast_coal <- list()
 mu_forecast_coal <- list()
 sigma_forecast_coal <- list()
-
+ar_forecast_coal <- list()
+CRPS_NGas <- list()
+CRPS_NGas_ar <- list()
+CRPS_oil <- list()
+CRPS_oil_ar <- list()
+CRPS_coal <- list()
+CRPS_coal_ar <- list()
 #for (i in 1:(length(NGas_ts) - 2500)){
 for (i in 1:200){
   best_model_NGas_fit <- ugarchfit(best_model_NGas, NGas_ts[1:(2500+i-1)], solver = 'hybrid')
   forecast_NGas <- ugarchforecast(best_model_NGas_fit, n.ahead = 1)
   fitted_forecast_NGas[[i]] <- fitted(forecast_NGas)
   sigma_forecast_NGas[[i]] <- sigma(forecast_NGas)
+  ar_model_NGas <- ar.ols(NGas_ts[1:(2500+i-1)],order = 1)
+  ar_forecast_NGas[[i]] <- as.numeric(predict(ar_model_NGas, n.ahead = 1)$pred)
+  
   
   best_model_oil_fit <- ugarchfit(best_model_oil, oil_ts[1:(2500+i-1)], solver = 'hybrid')
   forecast_oil <- ugarchforecast(best_model_oil_fit, n.ahead = 1)
   fitted_forecast_oil[[i]] <- fitted(forecast_oil)
   sigma_forecast_oil[[i]] <- sigma(forecast_oil)
+  ar_model_oil <- ar.ols(oil_ts[1:(2500+i-1)],order = 1)
+  ar_forecast_oil[[i]] <- as.numeric(predict(ar_model_oil, n.ahead = 1)$pred)
   
   best_model_coal_fit <- ugarchfit(best_model_coal, coal_ts[1:(2500+i-1)], solver = 'hybrid')
   forecast_coal <- ugarchforecast(best_model_coal_fit, n.ahead = 1)
   fitted_forecast_coal[[i]] <- fitted(forecast_coal)
   sigma_forecast_coal[[i]] <- sigma(forecast_coal)
+  ar_model_coal <- ar.ols(coal_ts[1:(2500+i-1)],order = 1)
+  ar_forecast_coal[[i]] <- as.numeric(predict(ar_model_coal, n.ahead = 1)$pred)
   
-  CRPS_NGas[[i]] <- CRPS(forecast_NGas@forecast$seriesFor, coef(best_model_NGas_fit)[1], sd(NGas_ts[1:(2500+i-1)]))
-  CRPS_oil[[i]] <- CRPS(forecast_oil@forecast$seriesFor, coef(best_model_oil_fit)[1], sd(oil_ts[1:(2500+i-1)]))
-  CRPS_coal[[i]] <- CRPS(forecast_coal@forecast$seriesFor, coef(best_model_coal_fit)[1], sd(coal_ts[1:(2500+i-1)]))
+  CRPS_NGas[[i]] <- GaussCrps(fitted_forecast_NGas[[i]], sigma_forecast_NGas[[i]], NGas_ts[2500+i])
+  CRPS_NGas_ar[[i]] <- GaussCrps(ar_forecast_NGas[[i]], mean(NGas_ts[1:(2500+i-1)]), NGas_ts[2500+i])
+  CRPS_oil[[i]] <- GaussCrps(fitted_forecast_oil[[i]], sigma_forecast_oil[[i]], oil_ts[2500+i])
+  CRPS_oil_ar[[i]] <- GaussCrps(ar_forecast_oil[[i]], mean(oil_ts[1:(2500+i-1)]), sd(oil_ts[1:(2500+i-1)]))
+  CRPS_coal[[i]] <- GaussCrps(fitted_forecast_coal[[i]], sigma_forecast_coal[[i]], coal_ts[2500+i])
+  CRPS_coal_ar[[i]] <- GaussCrps(ar_forecast_coal[[i]], mean(coal_ts[1:(2500+i-1)]), sd(coal_ts[1:(2500+i-1)]))
   #print(paste0('%',(i/(length(NGas_ts) - 2500))*100))
   print(paste0('%',i/2))
 }
+CRPS_ngas <- CRPS(unlist(fitted_forecast_NGas), mean(unlist(fitted_forecast_NGas)), sd(unlist(fitted_forecast_NGas)))
 
+ar_model_coal <- ar.ols(coal_ts[1:(2500-1)],order = 1)
+ar_forecast_coal[[i]] <- a <- 
 
+##part f
 
 #CRPS
 # Create a vector of observed values
