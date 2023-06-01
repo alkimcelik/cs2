@@ -13,7 +13,8 @@ CRPS <- function(x,mean,sigma){
   score <- -sigma*(1/sqrt(pi)-2*dnorm(standart_value)-standart_value*(2*pnorm(standart_value)-1))
   return(score)
 }
-commodities <- read.csv('C:\\Users\\Acer\\OneDrive - ADA University\\Documents\\GitHub\\cs2\\commodities.csv')
+#commodities <- read.csv('C:\\Users\\Acer\\OneDrive - ADA University\\Documents\\GitHub\\cs2\\commodities.csv')
+commodities <- read.csv('C:/Users/alkim/OneDrive/Documents/GitHub/cs2/commodities.csv')
 commodities$date <- as.Date(commodities$date)
 NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
 oil_ts <- xts(commodities$oil, order.by = commodities$date)
@@ -50,6 +51,8 @@ library(rugarch)
 library(ensembleBMA)
 library(scoringutils)
 library(ggplot2)
+library(PerformanceAnalytics)
+library(copula)
 #part b
 ### Train datalarini cikardik
 
@@ -216,24 +219,27 @@ best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
                               variance.model = list(garchOrder = c(1, 1)))
 best_model_NGas_fit <- ugarchfit(best_model_NGas, NGas_ts_train, solver = 'hybrid')
 best_model_NGas_fit_std_residuals <- residuals(best_model_NGas_fit)/sigma(best_model_NGas_fit)
-pit_NGas <- pdist("norm",best_model_NGas_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_NGas_fit)["skew"], shape=coef(best_model_NGas_fit)["shape"])
+#pit_NGas <- pdist("norm",best_model_NGas_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_NGas_fit)["skew"], shape=coef(best_model_NGas_fit)["shape"])
+pit_NGas <- pobs(residuals(best_model_NGas_fit))
 plot_pit(pit_NGas)
 
 best_model_oil <- ugarchspec(mean.model = list(armaOrder = c(0, 1)),
                              variance.model = list(garchOrder = c(1, 1)))
 best_model_oil_fit <- ugarchfit(best_model_oil, oil_ts_train, solver = 'hybrid')
 best_model_oil_fit_std_residuals <- residuals(best_model_oil_fit)/sigma(best_model_oil_fit)
-pit_oil <- pdist("norm",best_model_oil_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_oil_fit)["skew"], shape=coef(best_model_oil_fit)["shape"])
+#pit_oil <- pdist("norm",best_model_oil_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_oil_fit)["skew"], shape=coef(best_model_oil_fit)["shape"])
+pit_oil <- pobs(residuals(best_model_oil_fit))
 plot_pit(pit_oil)
 
 best_model_coal <- ugarchspec(mean.model = list(armaOrder = c(2, 2)),
                               variance.model = list(garchOrder = c(1, 1)))
 best_model_coal_fit <- ugarchfit(best_model_coal, coal_ts_train, solver = 'hybrid')
 best_model_coal_fit_std_residuals <- residuals(best_model_coal_fit)/sigma(best_model_coal_fit)
-pit_coal <- pdist("norm",best_model_coal_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_coal_fit)["skew"], shape=coef(best_model_coal_fit)["shape"])
+#pit_coal <- pdist("norm",best_model_coal_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_coal_fit)["skew"], shape=coef(best_model_coal_fit)["shape"])
+pit_coal <- pobs(residuals(best_model_coal_fit))
 plot_pit(pit_coal)
 
-residuals_df <- as.data.frame(cbind(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals, best_model_coal_fit_std_residuals))
+residuals_df <- as.data.frame(cbind(pit_NGas, pit_oil, pit_coal))
 colnames(residuals_df) <- c('NGas', 'oil', 'coal')
 
 cor(residuals_df, method = 'pearson')
@@ -241,8 +247,16 @@ cor(residuals_df, method = 'kendall')
 cor(residuals_df, method = 'spearman')
 #NGas vs. oil
 
+ggplot(residuals_df,aes(NGas,oil))+geom_point()# + geom_smooth(method = 'lm')
+ggplot(residuals_df,aes(NGas,coal))+geom_point()# + geom_smooth(method = 'lm')
+ggplot(residuals_df,aes(coal,oil))+geom_point()# + geom_smooth(method = 'lm')
 
+a <- fitCopula(normalCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
+fitCopula(tCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
+fitCopula(indepCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
 
-ggplot(residuals_df,aes(NGas,oil))+geom_point()
-ggplot(residuals_df,aes(NGas,coal))+geom_point()
-ggplot(residuals_df,aes(coal,oil))+geom_point()
+indep_copula <- normalCopula(param = matrix(c(1,0,1,0), nrow= 2, ncol = 2))
+
+# Create the joint distribution using the independent copula
+jointDistribution <- mvdc(copula = copula, margins = c("norm", "norm"), paramMargins = list(list(mean = mean(x), sd = sd(x)), list(mean = mean(y), sd = sd(y))))
+
