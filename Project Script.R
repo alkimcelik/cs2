@@ -48,6 +48,8 @@ pacf(commodities$NGas**2)
 # Install and load the 'rugarch' package
 library(rugarch)
 library(ensembleBMA)
+library(scoringutils)
+library(ggplot2)
 #part b
 ### Train datalarini cikardik
 
@@ -208,31 +210,39 @@ CRPS_ngas <- CRPS(unlist(fitted_forecast_NGas), mean(unlist(fitted_forecast_NGas
 ar_model_coal <- ar.ols(coal_ts[1:(2500-1)],order = 1)
 ar_forecast_coal[[i]] <- a <- 
 
-##part f
+#############SECOND PART###################
+# part h
+best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
+                              variance.model = list(garchOrder = c(1, 1)))
+best_model_NGas_fit <- ugarchfit(best_model_NGas, NGas_ts_train, solver = 'hybrid')
+best_model_NGas_fit_std_residuals <- residuals(best_model_NGas_fit)/sigma(best_model_NGas_fit)
+pit_NGas <- pdist("norm",best_model_NGas_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_NGas_fit)["skew"], shape=coef(best_model_NGas_fit)["shape"])
+plot_pit(pit_NGas)
 
-#CRPS
-# Create a vector of observed values
-observed <- c(1.2, 2.3, 0.8, 1.5, 3.1)
+best_model_oil <- ugarchspec(mean.model = list(armaOrder = c(0, 1)),
+                             variance.model = list(garchOrder = c(1, 1)))
+best_model_oil_fit <- ugarchfit(best_model_oil, oil_ts_train, solver = 'hybrid')
+best_model_oil_fit_std_residuals <- residuals(best_model_oil_fit)/sigma(best_model_oil_fit)
+pit_oil <- pdist("norm",best_model_oil_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_oil_fit)["skew"], shape=coef(best_model_oil_fit)["shape"])
+plot_pit(pit_oil)
 
-# Create a matrix of forecast probabilities
-# Each row represents a different forecast, and each column represents a probability value
-# Replace 'forecast_probs' with your actual forecast probabilities
-forecast_probs <- matrix(c(0.1, 0.3, 0.4, 0.2,
-                           0.2, 0.2, 0.3, 0.3,
-                           0.3, 0.1, 0.2, 0.4,
-                           0.4, 0.3, 0.2, 0.1,
-                           0.1, 0.1, 0.4, 0.4), nrow = 5, byrow = TRUE)
+best_model_coal <- ugarchspec(mean.model = list(armaOrder = c(2, 2)),
+                              variance.model = list(garchOrder = c(1, 1)))
+best_model_coal_fit <- ugarchfit(best_model_coal, coal_ts_train, solver = 'hybrid')
+best_model_coal_fit_std_residuals <- residuals(best_model_coal_fit)/sigma(best_model_coal_fit)
+pit_coal <- pdist("norm",best_model_coal_fit_std_residuals, mu = 0, sigma = 1, skew = coef(best_model_coal_fit)["skew"], shape=coef(best_model_coal_fit)["shape"])
+plot_pit(pit_coal)
 
-# Calculate the CRPS for each forecast
-crps <- vector("numeric", length = nrow(forecast_probs))
-for (i in 1:nrow(forecast_probs)) {
-  cum_probs <- cumsum(forecast_probs[i, ])
-  crps[i] <- sum((cum_probs - (observed[i] <= cum_probs))^2)
-}
+residuals_df <- as.data.frame(cbind(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals, best_model_coal_fit_std_residuals))
+colnames(residuals_df) <- c('NGas', 'oil', 'coal')
 
-# Calculate the average CRPS
-average_crps <- mean(crps)
+cor(residuals_df, method = 'pearson')
+cor(residuals_df, method = 'kendall')
+cor(residuals_df, method = 'spearman')
+#NGas vs. oil
 
-# Print the CRPS values
-print(crps)
-print(average_crps)
+
+
+ggplot(residuals_df,aes(NGas,oil))+geom_point()
+ggplot(residuals_df,aes(NGas,coal))+geom_point()
+ggplot(residuals_df,aes(coal,oil))+geom_point()
