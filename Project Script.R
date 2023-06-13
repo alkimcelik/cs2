@@ -287,19 +287,43 @@ normal_fit_aic <- -2 * normal_fit@loglik + 2 * 3
 t_fit <- fitCopula(tCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_coal), as.numeric(pit_NGas), as.numeric(pit_oil)), method = 'ml')
 t_fit_aic <- -2 * t_fit@loglik + 2 * 3
 #part j
-prob_forecast_NGas <- list()
-prob_forecast_coal <- list()
-prob_forecast_oil <- list()
+prob_forecast_NGas_t <- list()
+prob_forecast_coal_t <- list()
+prob_forecast_oil_t <- list()
+
+prob_forecast_NGas_normal <- list()
+prob_forecast_coal_normal <- list()
+prob_forecast_oil_normal <- list()
+
+prob_forecast_NGas_indep <- list()
+prob_forecast_coal_indep <- list()
+prob_forecast_oil_indep <- list()
 for(i in 1:200){
   pit_NGas <- pobs(unlist(residuals_NGas[[i]]))
   pit_coal <- pobs(unlist(residuals_coal[[i]]))
   pit_oil <- pobs(unlist(residuals_oil[[i]]))
+  
+  indep_copula <- indepCopula(dim = 3)
+  pse_obs_indep <- rCopula(1000, indep_copula)
+  prob_forecast_NGas_indep[[i]] <- qnorm(pse_obs_indep[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
+  prob_forecast_coal_indep[[i]] <- qnorm(pse_obs_indep[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
+  prob_forecast_oil_indep[[i]] <- qnorm(pse_obs_indep[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
+  
+  
+  normal_fit <- fitCopula(normalCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_NGas), as.numeric(pit_coal), as.numeric(pit_oil)), method = 'ml')
+  normal_fit_est <- normal_fit@estimate
+  pse_obs_normal <- rCopula(1000, tCopula(param = normal_fit_est,dim = 3, dispstr = 'un'))
+  prob_forecast_NGas_normal[[i]] <- qnorm(pse_obs_normal[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
+  prob_forecast_coal_normal[[i]] <- qnorm(pse_obs_normal[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
+  prob_forecast_oil_normal[[i]] <- qnorm(pse_obs_normal[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
+  
   t_fit <- fitCopula(tCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_NGas), as.numeric(pit_coal), as.numeric(pit_oil)), method = 'ml')
   t_fit_est <- t_fit@estimate[1:3]
   pse_obs_t <- rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un'))
-  prob_forecast_NGas <- qnorm(pse_obs_t[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
-  prob_forecast_coal <- qnorm(pse_obs_t[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
-  prob_forecast_oil <- qnorm(pse_obs_t[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
+  prob_forecast_NGas_t[[i]] <- qnorm(pse_obs_t[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
+  prob_forecast_coal_t[[i]] <- qnorm(pse_obs_t[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
+  prob_forecast_oil_t[[i]] <- qnorm(pse_obs_t[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
+  
   print(paste0('%',i/2))
   }
 
