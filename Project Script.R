@@ -13,6 +13,14 @@ CRPS <- function(x,mean,sigma){
   score <- -sigma*(1/sqrt(pi)-2*dnorm(standart_value)-standart_value*(2*pnorm(standart_value)-1))
   return(score)
 }
+
+scatterhist <- function(x, y, xlab = '', ylab = '', xl = NULL, yl = NULL, m = NULL){
+  plot(x, y, xlab = xl, ylab = yl, pch = ' .', cex = 1.5, main = m)
+  hist(x, freq = FALSE, xlab = xl, main = xl)
+  hist(y, freq = FALSE, xlab = yl, main = yl)
+}
+
+
 #commodities <- read.csv('C:\\Users\\Acer\\OneDrive - ADA University\\Documents\\GitHub\\cs2\\commodities.csv')
 commodities <- read.csv('C:/Users/alkim/OneDrive/Documents/GitHub/cs2/commodities.csv')
 commodities$date <- as.Date(commodities$date)
@@ -246,10 +254,27 @@ cor(residuals_df, method = 'pearson')
 cor(residuals_df, method = 'kendall')
 cor(residuals_df, method = 'spearman')
 #NGas vs. oil
+ggplot(residuals_df)+geom_point(aes(NGas,oil)) + theme_minimal() + labs(x ='Natural Gas', y = 'Oil')# + geom_smooth(method = 'lm')
+ggplot()+geom_point(aes(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals)) + theme_minimal() + labs(x ='Natural Gas', y = 'Oil')# + geom_smooth(method = 'lm')
 
-ggplot(residuals_df,aes(NGas,oil))+geom_point()# + geom_smooth(method = 'lm')
+ggplot(residuals_df)+geom_point(aes(NGas,coal)) + theme_minimal() + labs(x ='Natural Gas', y = 'Coal')# + geom_smooth(method = 'lm')
+ggplot()+geom_point(aes(best_model_NGas_fit_std_residuals, best_model_coal_fit_std_residuals)) + theme_minimal() + labs(x ='Natural Gas', y = 'Coal')# + geom_smooth(method = 'lm')
+
+ggplot(residuals_df)+geom_point(aes(coal,oil)) + theme_minimal() + labs(x ='Coal', y = 'Oil')# + geom_smooth(method = 'lm')
+ggplot()+geom_point(aes(best_model_coal_fit_std_residuals, best_model_oil_fit_std_residuals)) + theme_minimal() + labs(x ='Coal', y = 'Oil')# + geom_smooth(method = 'lm')
+
+hist(best_model_NGas_fit_std_residuals, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+hist(best_model_coal_fit_std_residuals, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+hist(best_model_oil_fit_std_residuals, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+
+hist(residuals_df$NGas, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+hist(residuals_df$coal, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+hist(residuals_df$oil, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
+
 ggplot(residuals_df,aes(NGas,coal))+geom_point()# + geom_smooth(method = 'lm')
 ggplot(residuals_df,aes(coal,oil))+geom_point()# + geom_smooth(method = 'lm')
+
+scatterhist(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals, xlab = 'NGas', ylab = 'Oil')
 
 a <- fitCopula(normalCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
 fitCopula(tCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
