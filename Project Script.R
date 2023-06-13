@@ -166,14 +166,17 @@ for(i in 1:200){
 
 #####ITERATIVE FORECASTING WITHOUT REESTIMATION######
 fitted_forecast_NGas <- list()
+residuals_NGas <- list()
 mu_forecast_NGas <- list()
 sigma_forecast_NGas <- list()
 ar_forecast_NGas <- list()
 fitted_forecast_oil <- list()
+residuals_oil <- list()
 mu_forecast_oil <- list()
 sigma_forecast_oil <- list()
 ar_forecast_oil <- list()
 fitted_forecast_coal <- list()
+residuals_coal <- list()
 mu_forecast_coal <- list()
 sigma_forecast_coal <- list()
 ar_forecast_coal <- list()
@@ -186,6 +189,7 @@ CRPS_coal_ar <- list()
 #for (i in 1:(length(NGas_ts) - 2500)){
 for (i in 1:200){
   best_model_NGas_fit <- ugarchfit(best_model_NGas, NGas_ts[1:(2500+i-1)], solver = 'hybrid')
+  residuals_NGas[[i]] <- residuals(best_model_NGas_fit)
   forecast_NGas <- ugarchforecast(best_model_NGas_fit, n.ahead = 1)
   fitted_forecast_NGas[[i]] <- fitted(forecast_NGas)
   sigma_forecast_NGas[[i]] <- sigma(forecast_NGas)
@@ -194,6 +198,7 @@ for (i in 1:200){
   
   
   best_model_oil_fit <- ugarchfit(best_model_oil, oil_ts[1:(2500+i-1)], solver = 'hybrid')
+  residuals_oil[[i]] <- residuals(best_model_oil_fit)
   forecast_oil <- ugarchforecast(best_model_oil_fit, n.ahead = 1)
   fitted_forecast_oil[[i]] <- fitted(forecast_oil)
   sigma_forecast_oil[[i]] <- sigma(forecast_oil)
@@ -201,6 +206,7 @@ for (i in 1:200){
   ar_forecast_oil[[i]] <- as.numeric(predict(ar_model_oil, n.ahead = 1)$pred)
   
   best_model_coal_fit <- ugarchfit(best_model_coal, coal_ts[1:(2500+i-1)], solver = 'hybrid')
+  residuals_coal[[i]] <- residuals(best_model_coal_fit)
   forecast_coal <- ugarchforecast(best_model_coal_fit, n.ahead = 1)
   fitted_forecast_coal[[i]] <- fitted(forecast_coal)
   sigma_forecast_coal[[i]] <- sigma(forecast_coal)
@@ -275,13 +281,33 @@ ggplot(residuals_df,aes(NGas,coal))+geom_point()# + geom_smooth(method = 'lm')
 ggplot(residuals_df,aes(coal,oil))+geom_point()# + geom_smooth(method = 'lm')
 
 scatterhist(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals, xlab = 'NGas', ylab = 'Oil')
+#part i
+normal_fit <- fitCopula(normalCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_coal), as.numeric(pit_NGas), as.numeric(pit_oil)), method = 'ml')
+normal_fit_aic <- -2 * normal_fit@loglik + 2 * 3 
+t_fit <- fitCopula(tCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_coal), as.numeric(pit_NGas), as.numeric(pit_oil)), method = 'ml')
+t_fit_aic <- -2 * t_fit@loglik + 2 * 3
+#part j
+prob_forecast_NGas <- list()
+prob_forecast_coal <- list()
+prob_forecast_oil <- list()
+for(i in 1:200){
+  pit_NGas <- pobs(unlist(residuals_NGas[[i]]))
+  pit_coal <- pobs(unlist(residuals_coal[[i]]))
+  pit_oil <- pobs(unlist(residuals_oil[[i]]))
+  t_fit <- fitCopula(tCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_NGas), as.numeric(pit_coal), as.numeric(pit_oil)), method = 'ml')
+  t_fit_est <- t_fit@estimate[1:3]
+  pse_obs_t <- rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un'))
+  prob_forecast_NGas <- qnorm(pse_obs_t[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
+  prob_forecast_coal <- qnorm(pse_obs_t[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
+  prob_forecast_oil <- qnorm(pse_obs_t[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
+  print(paste0('%',i/2))
+  }
 
-a <- fitCopula(normalCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
-fitCopula(tCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
-fitCopula(indepCopula(), cbind(as.numeric(pit_coal), as.numeric(pit_NGas)), method = 'ml')
+fitCopula(gumbelCopula(dim = 3), cbind(as.numeric(pit_coal), as.numeric(pit_NGas), as.numeric(pit_oil)), method = 'ml')
+rCopula(1000,fitCopula(tCopula(dim = 3), cbind(as.numeric(pit_coal), as.numeric(pit_NGas), as.numeric(pit_oil)), method = 'ml'))
 
-indep_copula <- normalCopula(param = matrix(c(1,0,1,0), nrow= 2, ncol = 2))
 
 # Create the joint distribution using the independent copula
-jointDistribution <- mvdc(copula = copula, margins = c("norm", "norm"), paramMargins = list(list(mean = mean(x), sd = sd(x)), list(mean = mean(y), sd = sd(y))))
+pse_obs <- qnorm(rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un')))
 
+qnorm(rCopula(1, indepCopula(dim = 3)))
