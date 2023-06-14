@@ -20,6 +20,19 @@ scatterhist <- function(x, y, xlab = '', ylab = '', xl = NULL, yl = NULL, m = NU
   hist(y, freq = FALSE, xlab = yl, main = yl)
 }
 
+energy_score <- function(X, y){
+  error1 <- 0
+  error2 <- 0
+  for(i in 1:length(X)){
+    error1 <- error1 + abs(X[[i]] - y)
+    if(i < length(X)){
+      error2 <- error2 + abs(X[[i]] - X[[i+1]])
+    }
+  }
+  error_sum <- error1/length(X) + error2/(2*(length(X)-1))
+  return(error_sum)
+}
+
 
 #commodities <- read.csv('C:\\Users\\Acer\\OneDrive - ADA University\\Documents\\GitHub\\cs2\\commodities.csv')
 commodities <- read.csv('C:/Users/alkim/OneDrive/Documents/GitHub/cs2/commodities.csv')
@@ -31,9 +44,9 @@ coal_ts <- xts(commodities$coal, order.by = commodities$date)
 plot.xts(NGas_ts, type = 'l')
 plot.xts(oil_ts, type = 'l')
 plot.xts(coal_ts, type = 'l')
-hist(coal_ts, breaks = 100)
-hist(NGas_ts, breaks = 100)
-hist(oil_ts, breaks = 100)
+hist(coal_ts, breaks = 50)
+hist(NGas_ts, breaks = 50)
+hist(oil_ts, breaks = 50)
 ############AUTOCORRELATION###########
 ###First Moments###
 acf(commodities$coal)
@@ -61,6 +74,8 @@ library(scoringutils)
 library(ggplot2)
 library(PerformanceAnalytics)
 library(copula)
+library(scoringRules)
+library(ggridges)
 #part b
 ### Train datalarini cikardik
 
@@ -112,21 +127,23 @@ AIC_values_index <- as.data.frame(cbind(unlist(index_list),unlist(AIC_values_NGa
 AIC_values_index$V2 <- as.numeric(AIC_values_index$V2) 
 AIC_values_index$V3<- as.numeric(AIC_values_index$V3) 
 AIC_values_index$V4<- as.numeric(AIC_values_index$V4) 
-##Best model with parameters p=2, q=1, r=1, s=1
+##Best model with parameters p=2, q=1, r=1, s=1 for NGas
 best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
                                            variance.model = list(garchOrder = c(1, 1)))
 best_model_NGas_fit <- ugarchfit(best_model_NGas, NGas_ts_train, solver = 'hybrid')
 
+##Best model with parameters p=0, q=1, r=1, s=1 for oil
 best_model_oil <- ugarchspec(mean.model = list(armaOrder = c(0, 1)),
                               variance.model = list(garchOrder = c(1, 1)))
 best_model_oil_fit <- ugarchfit(best_model_oil, oil_ts_train, solver = 'hybrid')
 
+##Best model with parameters p=2, q=2, r=1, s=1 for coal
 best_model_coal <- ugarchspec(mean.model = list(armaOrder = c(2, 2)),
                               variance.model = list(garchOrder = c(1, 1)))
 best_model_coal_fit <- ugarchfit(best_model_coal, coal_ts_train, solver = 'hybrid')
 
 
-# Access the estimated parameters
+# Reporting the estimated parameters
 print('NGas (2,1,1,1):')
 coef(best_model_NGas_fit)
 print('oil (0,1,1,1):')
@@ -140,30 +157,7 @@ best_model_oil_fit_sigma <- xts(sigma(best_model_oil_fit)**2, order.by = commodi
 plot.xts(best_model_oil_fit_sigma)
 best_model_coal_fit_sigma <- xts(sigma(best_model_coal_fit)**2, order.by = commodities$date[1:2500])
 plot.xts(best_model_coal_fit_sigma)
-#part d
-
-######ONE SHOT FORECASTING################
-forecast_NGas <- ugarchforecast(best_model_NGas_fit, n.ahead = 200)
-fitted_forecast_NGas <- fitted(forecast_NGas)
-sigma_forecast_NGas <- sigma(forecast_NGas)
-
-forecast_oil <- ugarchforecast(best_model_oil_fit, n.ahead = 200)
-fitted_forecast_oil <- fitted(forecast_oil)
-sigma_forecast_oil <- sigma(forecast_oil)
-
-
-forecast_coal <- ugarchforecast(best_model_coal_fit, n.ahead = 200)
-fitted_forecast_coal <- fitted(forecast_coal)
-sigma_forecast_coal <- sigma(forecast_coal)
-CRPS_NGas <- list()
-CRPS_oil <- list()
-CRPS_coal <- list()
-for(i in 1:200){
-  CRPS_NGas[[i]] <- CRPS(forecast_NGas@forecast$seriesFor[i], coef(best_model_NGas_fit)[1], sigma(best_model_NGas_fit)[1])
-  CRPS_oil[[i]] <- CRPS(forecast_oil@forecast$seriesFor[i], coef(best_model_oil_fit)[1], sigma(best_model_oil_fit)[1])
-  CRPS_coal[[i]] <- CRPS(forecast_coal@forecast$seriesFor[i], coef(best_model_coal_fit)[1], sigma(best_model_coal_fit)[1])
-}
-
+#part d-e
 #####ITERATIVE FORECASTING WITHOUT REESTIMATION######
 fitted_forecast_NGas <- list()
 residuals_NGas <- list()
@@ -222,10 +216,27 @@ for (i in 1:200){
   #print(paste0('%',(i/(length(NGas_ts) - 2500))*100))
   print(paste0('%',i/2))
 }
-CRPS_ngas <- CRPS(unlist(fitted_forecast_NGas), mean(unlist(fitted_forecast_NGas)), sd(unlist(fitted_forecast_NGas)))
+dates <- rep(commodities$date[2501:2700],each = 1000)
+sim_forecasts_NGas <- as.matrix(rnorm(1000,fitted_forecast_NGas[[1]], sigma_forecast_NGas[[1]]), ncol = 1)
+sim_forecasts_oil <- as.matrix(rnorm(1000,fitted_forecast_oil[[1]], sigma_forecast_oil[[1]]), ncol = 1)
+sim_forecasts_coal <- as.matrix(rnorm(1000,fitted_forecast_coal[[1]], sigma_forecast_coal[[1]]), ncol = 1)
+for(i in 2:200){
+  sim_forecasts_NGas <- rbind(sim_forecasts_NGas, as.matrix(rnorm(1000,fitted_forecast_NGas[[i]], sigma_forecast_NGas[[i]]), ncol = 1))
+  sim_forecasts_oil <- rbind(sim_forecasts_oil, as.matrix(rnorm(1000,fitted_forecast_oil[[i]], sigma_forecast_oil[[i]]), ncol = 1))
+  sim_forecasts_coal <- rbind(sim_forecasts_coal, as.matrix(rnorm(1000,fitted_forecast_coal[[i]], sigma_forecast_coal[[i]]), ncol = 1))
+}
+sim_forecasts_NGas_df <- as.data.frame(cbind(dates, sim_forecasts_NGas))
+sim_forecasts_NGas_df$dates <- as.Date(sim_forecasts_NGas_df$dates)
+sim_forecasts_oil_df <- as.data.frame(cbind(dates, sim_forecasts_oil))
+sim_forecasts_oil_df$dates <- as.Date(sim_forecasts_oil_df$dates)
+sim_forecasts_coal_df <- as.data.frame(cbind(dates, sim_forecasts_coal))
+sim_forecasts_coal_df$dates <- as.Date(sim_forecasts_coal_df$dates)
+ggplot(sim_forecasts_NGas_df[95000:130000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
+ggplot(sim_forecasts_NGas_df[1:30000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
 
-ar_model_coal <- ar.ols(coal_ts[1:(2500-1)],order = 1)
-ar_forecast_coal[[i]] <- a <- 
+
 
 #############SECOND PART###################
 # part h
@@ -303,13 +314,14 @@ for(i in 1:200){
   pit_coal <- pobs(unlist(residuals_coal[[i]]))
   pit_oil <- pobs(unlist(residuals_oil[[i]]))
   
+  #independent copula
   indep_copula <- indepCopula(dim = 3)
   pse_obs_indep <- rCopula(1000, indep_copula)
   prob_forecast_NGas_indep[[i]] <- qnorm(pse_obs_indep[,1], mean = fitted_forecast_NGas[[i]], sd = sigma_forecast_NGas[[i]])
   prob_forecast_coal_indep[[i]] <- qnorm(pse_obs_indep[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
   prob_forecast_oil_indep[[i]] <- qnorm(pse_obs_indep[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
   
-  
+  #gaussian copula
   normal_fit <- fitCopula(normalCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_NGas), as.numeric(pit_coal), as.numeric(pit_oil)), method = 'ml')
   normal_fit_est <- normal_fit@estimate
   pse_obs_normal <- rCopula(1000, tCopula(param = normal_fit_est,dim = 3, dispstr = 'un'))
@@ -317,6 +329,7 @@ for(i in 1:200){
   prob_forecast_coal_normal[[i]] <- qnorm(pse_obs_normal[,2], mean = fitted_forecast_coal[[i]], sd = sigma_forecast_coal[[i]])
   prob_forecast_oil_normal[[i]] <- qnorm(pse_obs_normal[,3], mean = fitted_forecast_oil[[i]], sd = sigma_forecast_oil[[i]])
   
+  #t-copula
   t_fit <- fitCopula(tCopula(dim = 3, dispstr = 'un'), cbind(as.numeric(pit_NGas), as.numeric(pit_coal), as.numeric(pit_oil)), method = 'ml')
   t_fit_est <- t_fit@estimate[1:3]
   pse_obs_t <- rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un'))
@@ -335,3 +348,5 @@ rCopula(1000,fitCopula(tCopula(dim = 3), cbind(as.numeric(pit_coal), as.numeric(
 pse_obs <- qnorm(rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un')))
 
 qnorm(rCopula(1, indepCopula(dim = 3)))
+
+es_sample(as.vector(cbind(as.numeric(NGas_ts[[2501]]),as.numeric(coal_ts[[2501]]),as.numeric(oil_ts[[2501]]))),t(as.matrix(cbind(prob_forecast_NGas_t[[1]], prob_forecast_coal_t[[1]], prob_forecast_oil_t[[1]]))))
