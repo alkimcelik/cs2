@@ -41,7 +41,7 @@ NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
 oil_ts <- xts(commodities$oil, order.by = commodities$date)
 coal_ts <- xts(commodities$coal, order.by = commodities$date)
 ####Plotting the time series basic####
-plot.xts(NGas_ts, type = 'l')
+plot.xts(NGas_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Natural Gas')
 plot.xts(oil_ts, type = 'l')
 plot.xts(coal_ts, type = 'l')
 hist(coal_ts, breaks = 50)
@@ -76,6 +76,7 @@ library(PerformanceAnalytics)
 library(copula)
 library(scoringRules)
 library(ggridges)
+library(data.table)
 #part b
 ### Train datalarini cikardik
 
@@ -231,13 +232,48 @@ sim_forecasts_oil_df <- as.data.frame(cbind(dates, sim_forecasts_oil))
 sim_forecasts_oil_df$dates <- as.Date(sim_forecasts_oil_df$dates)
 sim_forecasts_coal_df <- as.data.frame(cbind(dates, sim_forecasts_coal))
 sim_forecasts_coal_df$dates <- as.Date(sim_forecasts_coal_df$dates)
-ggplot(sim_forecasts_NGas_df[95000:130000,], aes(x = V2, y = as.factor(dates))) +
+#visulizations of probabilistic forecasts from volatile and non-volatile
+ggplot(sim_forecasts_NGas_df[159001:172000,], aes(x = V2, y = as.factor(dates))) +
   geom_density_ridges(rel_min_height = 0.005)
-ggplot(sim_forecasts_NGas_df[1:30000,], aes(x = V2, y = as.factor(dates))) +
+ggplot(sim_forecasts_NGas_df[125001:139000,], aes(x = V2, y = as.factor(dates))) +
   geom_density_ridges(rel_min_height = 0.005)
 
+ggplot(sim_forecasts_oil_df[37001:60000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
+ggplot(sim_forecasts_oil_df[135001:160000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
 
+ggplot(sim_forecasts_coal_df[100001:120000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
+ggplot(sim_forecasts_coal_df[1:15000,], aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005)
 
+plot(unlist(sigma_forecast_NGas), type = 'l')
+plot(unlist(sigma_forecast_oil), type = 'l')
+plot(unlist(sigma_forecast_coal), type = 'l')
+
+# part f
+NGas_forecasts_quantiles_05 <- qnorm(0.05, unlist(fitted_forecast_NGas), unlist(sigma_forecast_NGas))
+NGas_forecasts_quantiles_95 <- qnorm(0.95, unlist(fitted_forecast_NGas), unlist(sigma_forecast_NGas))
+oil_forecasts_quantiles_05 <- qnorm(0.05, unlist(fitted_forecast_oil), unlist(sigma_forecast_oil))
+oil_forecasts_quantiles_95 <- qnorm(0.95, unlist(fitted_forecast_oil), unlist(sigma_forecast_oil))
+coal_forecasts_quantiles_05 <- qnorm(0.05, unlist(fitted_forecast_coal), unlist(sigma_forecast_coal))
+coal_forecasts_quantiles_95 <- qnorm(0.95, unlist(fitted_forecast_coal), unlist(sigma_forecast_coal))
+NGas_actual_forecasts_with_quantiles <- cbind.data.frame(commodities$date[2501:2700],NGas_ts[2501:2700],NGas_forecasts_quantiles_05,NGas_forecasts_quantiles_95)
+colnames(NGas_actual_forecasts_with_quantiles) <- c('Date','Actual_Values', 'lower_percent', 'upper_percent')
+oil_actual_forecasts_with_quantiles <- cbind.data.frame(commodities$date[2501:2700],oil_ts[2501:2700],oil_forecasts_quantiles_05,oil_forecasts_quantiles_95)
+colnames(oil_actual_forecasts_with_quantiles) <- c('Date','Actual_Values', 'lower_percent', 'upper_percent')
+coal_actual_forecasts_with_quantiles <- cbind.data.frame(commodities$date[2501:2700],coal_ts[2501:2700],coal_forecasts_quantiles_05,coal_forecasts_quantiles_95)
+colnames(coal_actual_forecasts_with_quantiles) <- c('Date','Actual_Values', 'lower_percent', 'upper_percent')
+
+ggplot(NGas_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
+  geom_line(aes(y = lower_percent), color = 'red') 
+
+ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
+  geom_line(aes(y = lower_percent), color = 'red')
+
+ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
+  geom_line(aes(y = lower_percent), color = 'red') 
 #############SECOND PART###################
 # part h
 best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
