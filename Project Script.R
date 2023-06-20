@@ -42,29 +42,42 @@ oil_ts <- xts(commodities$oil, order.by = commodities$date)
 coal_ts <- xts(commodities$coal, order.by = commodities$date)
 ####Plotting the time series basic####
 plot.xts(NGas_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Natural Gas')
-plot.xts(oil_ts, type = 'l')
-plot.xts(coal_ts, type = 'l')
-hist(coal_ts, breaks = 50)
-hist(NGas_ts, breaks = 50)
-hist(oil_ts, breaks = 50)
+plot.xts(oil_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Oil')
+plot.xts(coal_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Coal')
+hist(coal_ts, breaks = 50, main = "Histogram of Coal")
+hist(NGas_ts, breaks = 50, main = "Histogram of Natural Gas")
+hist(oil_ts, breaks = 50, main = "Histogram of Oil")
+
+ggplot(data = coal_ts) +
+  geom_histogram(aes(x = coal_ts), bins = 50, fill = "steelblue", color = "white") +
+  labs(x = "Coal",y = "Frequency")
+
+
+ggplot(data = oil_ts) +
+  geom_histogram(aes(x = oil_ts), bins = 50, fill = "steelblue", color = "white") +
+  labs(x = "Oil",y = "Frequency")
+
+ggplot(data = NGas_ts) +
+  geom_histogram(aes(x = NGas_ts), bins = 50, fill = "steelblue", color = "white") +
+  labs(x = "Natural Gas",y="Frequency")
 ############AUTOCORRELATION###########
 ###First Moments###
-acf(commodities$coal)
-acf(commodities$oil)
-acf(commodities$NGas)
+acf(commodities$coal, main="First moments ACF coal")
+acf(commodities$oil, main="First moments ACF oil")
+acf(commodities$NGas, main="First moments ACF NGgas")
 ###Second Moments###
-acf(commodities$coal**2)
-acf(commodities$oil**2)
-acf(commodities$NGas**2)
+acf(commodities$coal**2, main="Second moments ACF coal")
+acf(commodities$oil**2, main="Second moments ACF oil")
+acf(commodities$NGas**2, main="Second moments ACF NGas")
 ############PARTIAL AUTOCORRELATION###########
 ###First Moments###
-pacf(commodities$coal)
-pacf(commodities$oil)
-pacf(commodities$NGas)
+pacf(commodities$coal, main="First moments PACF coal")
+pacf(commodities$oil, main="First moments PACF oil")
+pacf(commodities$NGas, main="First moments PACF Ngas")
 ###Second Moments###
-pacf(commodities$coal**2)
-pacf(commodities$oil**2)
-pacf(commodities$NGas**2)
+pacf(commodities$coal**2, main="Second moments PACF coal")
+pacf(commodities$oil**2, main="Second moments PACF oil")
+pacf(commodities$NGas**2, main="Second moments PACF NGas")
 
 #PART B (you know from where lol)
 # Install and load the 'rugarch' package
