@@ -266,14 +266,46 @@ colnames(oil_actual_forecasts_with_quantiles) <- c('Date','Actual_Values', 'lowe
 coal_actual_forecasts_with_quantiles <- cbind.data.frame(commodities$date[2501:2700],coal_ts[2501:2700],coal_forecasts_quantiles_05,coal_forecasts_quantiles_95)
 colnames(coal_actual_forecasts_with_quantiles) <- c('Date','Actual_Values', 'lower_percent', 'upper_percent')
 
-ggplot(NGas_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
-  geom_line(aes(y = lower_percent), color = 'red') 
+ggplot(NGas_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values, color = 'actual')) + 
+  geom_line(aes(y = lower_percent, color = 'lower')) +
+  scale_x_date(breaks = seq(min(commodities$date),
+                            max(commodities$date),
+                            by = 50)) + theme_minimal() +
+  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Natural Gas') +
+  scale_colour_manual(values=c(actual="black", lower="red"),
+                      labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.2,0.9), 
+        legend.key.height= unit(0.4, 'cm'),
+        legend.box.background = element_rect(colour = "black"))
 
-ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
-  geom_line(aes(y = lower_percent), color = 'red')
 
-ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values)) + 
-  geom_line(aes(y = lower_percent), color = 'red') 
+ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values, color = 'actual')) + 
+  geom_line(aes(y = lower_percent,  color = 'lower')) +
+  scale_x_date(breaks = seq(min(commodities$date),
+                            max(commodities$date),
+                            by = 50)) + theme_minimal() +
+  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Oil') +
+  scale_colour_manual(values=c(actual="black", lower="red"),
+                      labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.8,0.95), 
+        legend.key.height= unit(0.4, 'cm'),
+        legend.box.background = element_rect(colour = "black"))
+
+
+ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values, color = 'actual')) + 
+  geom_line(aes(y = lower_percent , color = 'lower'))  +
+  scale_x_date(breaks = seq(min(commodities$date),
+                            max(commodities$date),
+                            by = 50)) + theme_minimal() +
+  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Coal') +
+  scale_colour_manual(values=c(actual="black", lower="red"),
+                      labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  theme(legend.title = element_blank(),
+        legend.position = c(0.8,1), 
+        legend.key.height= unit(0.4, 'cm'),
+        legend.box.background = element_rect(colour = "black"))
 #############SECOND PART###################
 # part h
 best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
