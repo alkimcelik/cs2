@@ -41,25 +41,37 @@ NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
 oil_ts <- xts(commodities$oil, order.by = commodities$date)
 coal_ts <- xts(commodities$coal, order.by = commodities$date)
 ####Plotting the time series basic####
-plot.xts(NGas_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Natural Gas')
-plot.xts(oil_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Oil')
-plot.xts(coal_ts, type = 'l', main = 'First Differences of Daily Short-Term Future Prices of Coal')
+plot.xts(NGas_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE)
+plot.xts(oil_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE)
+plot.xts(coal_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE)
 hist(coal_ts, breaks = 50, main = "Histogram of Coal")
 hist(NGas_ts, breaks = 50, main = "Histogram of Natural Gas")
 hist(oil_ts, breaks = 50, main = "Histogram of Oil")
 
 ggplot(data = coal_ts) +
-  geom_histogram(aes(x = coal_ts), bins = 50, fill = "steelblue", color = "white") +
-  labs(x = "Coal",y = "Frequency")
+  geom_histogram(aes(x = coal_ts), bins = 100, fill = "steelblue", color = "white") +
+  labs(x = "",y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title.y = element_text(size = 25))
 
 
 ggplot(data = oil_ts) +
-  geom_histogram(aes(x = oil_ts), bins = 50, fill = "steelblue", color = "white") +
-  labs(x = "Oil",y = "Frequency")
+  geom_histogram(aes(x = oil_ts), bins = 100, fill = "steelblue", color = "white") +
+  labs(x = "Oil",y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title.y = element_text(size = 25))
 
 ggplot(data = NGas_ts) +
-  geom_histogram(aes(x = NGas_ts), bins = 50, fill = "steelblue", color = "white") +
-  labs(x = "Natural Gas",y="Frequency")
+  geom_histogram(aes(x = NGas_ts), bins = 100, fill = "steelblue", color = "white") +
+  labs(x = "Natural Gas",y="Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title.y = element_text(size = 25))
 ############AUTOCORRELATION###########
 ###First Moments###
 acf(commodities$coal, main="First moments ACF coal")
