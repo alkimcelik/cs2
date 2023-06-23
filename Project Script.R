@@ -59,7 +59,7 @@ ggplot(data = coal_ts) +
 
 ggplot(data = oil_ts) +
   geom_histogram(aes(x = oil_ts), bins = 100, fill = "steelblue", color = "white") +
-  labs(x = "Oil",y = "Frequency") +
+  labs(x = "",y = "Frequency") +
   theme_minimal() +
   theme(axis.text.x = element_text(size = 25),
         axis.text.y = element_text(size = 25),
@@ -67,29 +67,29 @@ ggplot(data = oil_ts) +
 
 ggplot(data = NGas_ts) +
   geom_histogram(aes(x = NGas_ts), bins = 100, fill = "steelblue", color = "white") +
-  labs(x = "Natural Gas",y="Frequency") +
+  labs(x = "",y="Frequency") +
   theme_minimal() +
   theme(axis.text.x = element_text(size = 25),
         axis.text.y = element_text(size = 25),
         axis.title.y = element_text(size = 25))
 ############AUTOCORRELATION###########
 ###First Moments###
-acf(commodities$coal, main="First moments ACF coal")
-acf(commodities$oil, main="First moments ACF oil")
-acf(commodities$NGas, main="First moments ACF NGgas")
+acf(commodities$coal, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+acf(commodities$oil, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+acf(commodities$NGas, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 ###Second Moments###
-acf(commodities$coal**2, main="Second moments ACF coal")
-acf(commodities$oil**2, main="Second moments ACF oil")
-acf(commodities$NGas**2, main="Second moments ACF NGas")
+acf(commodities$coal**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+acf(commodities$oil**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+acf(commodities$NGas**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 ############PARTIAL AUTOCORRELATION###########
 ###First Moments###
-pacf(commodities$coal, main="First moments PACF coal")
-pacf(commodities$oil, main="First moments PACF oil")
-pacf(commodities$NGas, main="First moments PACF Ngas")
+pacf(commodities$coal, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+pacf(commodities$oil, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+pacf(commodities$NGas, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 ###Second Moments###
-pacf(commodities$coal**2, main="Second moments PACF coal")
-pacf(commodities$oil**2, main="Second moments PACF oil")
-pacf(commodities$NGas**2, main="Second moments PACF NGas")
+pacf(commodities$coal**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+pacf(commodities$oil**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
+pacf(commodities$NGas**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 
 #PART B (you know from where lol)
 # Install and load the 'rugarch' package
@@ -179,11 +179,11 @@ print('coal (2,2,1,1):')
 coef(best_model_coal_fit)
 #part c
 best_model_NGas_fit_sigma <- xts(sigma(best_model_NGas_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_NGas_fit_sigma)
+plot.xts(best_model_NGas_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
 best_model_oil_fit_sigma <- xts(sigma(best_model_oil_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_oil_fit_sigma)
+plot.xts(best_model_oil_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
 best_model_coal_fit_sigma <- xts(sigma(best_model_coal_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_coal_fit_sigma)
+plot.xts(best_model_coal_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
 #part d-e
 #####ITERATIVE FORECASTING WITHOUT REESTIMATION######
 fitted_forecast_NGas <- list()
