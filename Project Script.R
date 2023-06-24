@@ -41,7 +41,7 @@ NGas_ts <- xts(commodities$NGas, order.by = commodities$date)
 oil_ts <- xts(commodities$oil, order.by = commodities$date)
 coal_ts <- xts(commodities$coal, order.by = commodities$date)
 ####Plotting the time series basic####
-plot.xts(NGas_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE, ylim=c(-12,12))
+plot.xts(NGas_ts, type = 'l', main = '',cex.axis =1, main.timespan = FALSE, ylim=c(-12,12))
 plot.xts(oil_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE,ylim=c(-12,12))
 plot.xts(coal_ts, type = 'l', main = '',cex.axis =2, main.timespan = FALSE,ylim=c(-12,12))
 hist(coal_ts, breaks = 50, main = "Histogram of Coal")
@@ -91,7 +91,7 @@ pacf(commodities$coal**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 pacf(commodities$oil**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 pacf(commodities$NGas**2, main="", lag.max = 30,cex.axis = 2, cex.lab = 2)
 
-#PART B (you know from where lol)
+#PART B
 # Install and load the 'rugarch' package
 library(rugarch)
 library(ensembleBMA)
@@ -179,11 +179,11 @@ print('coal (2,2,1,1):')
 coef(best_model_coal_fit)
 #part c
 best_model_NGas_fit_sigma <- xts(sigma(best_model_NGas_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_NGas_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
+plot.xts(best_model_NGas_fit_sigma, main = '',cex.axis =1.75, main.timespan = FALSE, ylim=c(0,10))
 best_model_oil_fit_sigma <- xts(sigma(best_model_oil_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_oil_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
+plot.xts(best_model_oil_fit_sigma, main = '',cex.axis =1.75, main.timespan = FALSE, ylim=c(0,10))
 best_model_coal_fit_sigma <- xts(sigma(best_model_coal_fit)**2, order.by = commodities$date[1:2500])
-plot.xts(best_model_coal_fit_sigma, main = '',cex.axis =2, main.timespan = FALSE)
+plot.xts(best_model_coal_fit_sigma, main = '',cex.axis =1.75, main.timespan = FALSE, ylim=c(0,10))
 #part d-e
 #####ITERATIVE FORECASTING WITHOUT REESTIMATION######
 fitted_forecast_NGas <- list()
