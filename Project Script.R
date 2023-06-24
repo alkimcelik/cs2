@@ -265,20 +265,85 @@ sim_forecasts_oil_df$dates <- as.Date(sim_forecasts_oil_df$dates)
 sim_forecasts_coal_df <- as.data.frame(cbind(dates, sim_forecasts_coal))
 sim_forecasts_coal_df$dates <- as.Date(sim_forecasts_coal_df$dates)
 #visulizations of probabilistic forecasts from volatile and non-volatile
-ggplot(sim_forecasts_NGas_df[159001:172000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
-ggplot(sim_forecasts_NGas_df[125001:139000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
+ggplot(sim_forecasts_NGas_df, aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005) +
+  scale_y_discrete(labels = function(x) format(as.Date(x) + months(1), "%b"),
+                   breaks = unique(as.factor(sim_forecasts_NGas_df$dates)[seq(1, length(sim_forecasts_NGas_df$dates)+30000, length.out = 12)]))+
+  theme_minimal()+
+  labs(y = "Date", x="Predictions") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15, vjust = -1.5),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15)) 
 
-ggplot(sim_forecasts_oil_df[37001:60000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
-ggplot(sim_forecasts_oil_df[135001:160000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
+NGas_ts_test_df <- data.frame(date = (index(NGas_ts_test)), value = coredata(NGas_ts_test))
 
-ggplot(sim_forecasts_coal_df[100001:120000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
-ggplot(sim_forecasts_coal_df[1:15000,], aes(x = V2, y = as.factor(dates))) +
-  geom_density_ridges(rel_min_height = 0.005)
+ggplot(NGas_ts_test_df, aes(x = date, y = value)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Date", y = "Actual Values") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))+
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  #scale_x_discrete(labels = function(x) format(as.Date(x), "%b"),
+  #                 breaks = unique(as.factor(NGas_ts_test_df$date)[seq(1, length(NGas_ts_test_df$date)-1, length.out = 10)])) +
+  coord_flip()
+  
+
+
+ggplot(sim_forecasts_oil_df, aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005) +
+  scale_y_discrete(labels = function(x) format(as.Date(x) + months(1), "%b"),
+                   breaks = unique(as.factor(sim_forecasts_oil_df$dates)[seq(1, length(sim_forecasts_oil_df$dates)+30000, length.out = 12)]))+
+  theme_minimal()+
+  labs(y = "Date", x="Predictions") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15, vjust = -1.5),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15)) 
+
+oil_ts_test_df <- data.frame(date = (index(oil_ts_test)), value = coredata(oil_ts_test))
+
+ggplot(oil_ts_test_df, aes(x = date, y = value)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Date", y = "Actual Values") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))+
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  #scale_x_discrete(labels = function(x) format(as.Date(x), "%b"),
+  #                 breaks = unique(as.factor(NGas_ts_test_df$date)[seq(1, length(NGas_ts_test_df$date)-1, length.out = 10)])) +
+  coord_flip()
+
+ggplot(sim_forecasts_coal_df, aes(x = V2, y = as.factor(dates))) +
+  geom_density_ridges(rel_min_height = 0.005) +
+  scale_y_discrete(labels = function(x) format(as.Date(x) + months(1), "%b"),
+                   breaks = unique(as.factor(sim_forecasts_coal_df$dates)[seq(1, length(sim_forecasts_coal_df$dates)+30000, length.out = 12)]))+
+  theme_minimal()+
+  labs(y = "Date", x="Predictions") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15, vjust = -1.5),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15)) 
+
+coal_ts_test_df <- data.frame(date = (index(coal_ts_test)), value = coredata(coal_ts_test))
+
+ggplot(coal_ts_test_df, aes(x = date, y = value)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = "Date", y = "Actual Values") +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))+
+  scale_x_date(date_breaks = "1 month", date_labels = "%b") +
+  #scale_x_discrete(labels = function(x) format(as.Date(x), "%b"),
+  #                 breaks = unique(as.factor(NGas_ts_test_df$date)[seq(1, length(NGas_ts_test_df$date)-1, length.out = 10)])) +
+  coord_flip()
 
 plot(unlist(sigma_forecast_NGas), type = 'l')
 plot(unlist(sigma_forecast_oil), type = 'l')
