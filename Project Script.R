@@ -249,6 +249,12 @@ for(i in 1:200){
   sigma_ar_coal <- ar_model_coal$sigma2**(0.5)
   CRPS_coal_ar[[i]] <- GaussCrps(ar_forecast_coal[[i]], sigma_ar_coal, coal_ts[2500+i])
 }
+mean(unlist(CRPS_NGas))
+mean(unlist(CRPS_coal))
+mean(unlist(CRPS_oil))
+mean(unlist(CRPS_NGas_ar))
+mean(unlist(CRPS_coal_ar))
+mean(unlist(CRPS_oil_ar))
 dates <- rep(commodities$date[2501:2700],each = 1000)
 sim_forecasts_NGas <- as.matrix(rnorm(1000,fitted_forecast_NGas[[1]], sigma_forecast_NGas[[1]]), ncol = 1)
 sim_forecasts_oil <- as.matrix(rnorm(1000,fitted_forecast_oil[[1]], sigma_forecast_oil[[1]]), ncol = 1)
@@ -368,13 +374,18 @@ ggplot(NGas_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = 
   scale_x_date(breaks = seq(min(commodities$date),
                             max(commodities$date),
                             by = 50)) + theme_minimal() +
-  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Natural Gas') +
+  labs(y = 'EUR', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
   theme(legend.title = element_blank(),
         legend.position = c(0.2,0.9), 
         legend.key.height= unit(0.4, 'cm'),
-        legend.box.background = element_rect(colour = "black"))
+        legend.box.background = element_rect(colour = "black"),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15),
+        legend.text = element_text(size = 15))
 
 
 ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values, color = 'actual')) + 
@@ -382,13 +393,18 @@ ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = A
   scale_x_date(breaks = seq(min(commodities$date),
                             max(commodities$date),
                             by = 50)) + theme_minimal() +
-  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Oil') +
+  labs(y = 'USD', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
   theme(legend.title = element_blank(),
-        legend.position = c(0.8,0.95), 
+        legend.position = c(0.2,0.9), 
         legend.key.height= unit(0.4, 'cm'),
-        legend.box.background = element_rect(colour = "black"))
+        legend.box.background = element_rect(colour = "black"),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15),
+        legend.text = element_text(size = 15))
 
 
 ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = Actual_Values, color = 'actual')) + 
@@ -396,13 +412,18 @@ ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = 
   scale_x_date(breaks = seq(min(commodities$date),
                             max(commodities$date),
                             by = 50)) + theme_minimal() +
-  labs(y = 'First Differences of Daily Short-Term Prices', title = 'Coal') +
+  labs(y = 'USD', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
   theme(legend.title = element_blank(),
-        legend.position = c(0.8,1), 
+        legend.position = c(0.2,0.9), 
         legend.key.height= unit(0.4, 'cm'),
-        legend.box.background = element_rect(colour = "black"))
+        legend.box.background = element_rect(colour = "black"),
+        axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15),
+        legend.text = element_text(size = 15))
 #############SECOND PART###################
 # part h
 best_model_NGas <- ugarchspec(mean.model = list(armaOrder = c(2, 1)),
