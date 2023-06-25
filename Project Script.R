@@ -377,8 +377,9 @@ ggplot(NGas_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = 
   labs(y = 'EUR', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  ylim(c(-7,11)) +
   theme(legend.title = element_blank(),
-        legend.position = c(0.2,0.9), 
+        legend.position = c(0.2,1), 
         legend.key.height= unit(0.4, 'cm'),
         legend.box.background = element_rect(colour = "black"),
         axis.text.x = element_text(size = 15),
@@ -396,8 +397,9 @@ ggplot(oil_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = A
   labs(y = 'USD', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  ylim(c(-7,11)) +
   theme(legend.title = element_blank(),
-        legend.position = c(0.2,0.9), 
+        legend.position = c(0.2,1), 
         legend.key.height= unit(0.4, 'cm'),
         legend.box.background = element_rect(colour = "black"),
         axis.text.x = element_text(size = 15),
@@ -415,8 +417,9 @@ ggplot(coal_actual_forecasts_with_quantiles, aes(x = Date)) + geom_line(aes(y = 
   labs(y = 'USD', title = '') +
   scale_colour_manual(values=c(actual="black", lower="red"),
                       labels = c('Actual', '0.05 Quantile of Forecasts')) +
+  ylim(c(-7,11)) +
   theme(legend.title = element_blank(),
-        legend.position = c(0.2,0.9), 
+        legend.position = c(0.2,1), 
         legend.key.height= unit(0.4, 'cm'),
         legend.box.background = element_rect(colour = "black"),
         axis.text.x = element_text(size = 15),
@@ -457,13 +460,31 @@ cor(residuals_df, method = 'pearson')
 cor(residuals_df, method = 'kendall')
 cor(residuals_df, method = 'spearman')
 #NGas vs. oil
-ggplot(residuals_df)+geom_point(aes(NGas,oil)) + theme_minimal() + labs(x ='Natural Gas', y = 'Oil')# + geom_smooth(method = 'lm')
+ggplot(residuals_df)+
+  geom_point(aes(NGas,oil)) + theme_minimal() + 
+  labs(x ='Tranformed Residuals from Natural Gas', y = 'Tranformed Residuals from Oil') +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))
 ggplot()+geom_point(aes(best_model_NGas_fit_std_residuals, best_model_oil_fit_std_residuals)) + theme_minimal() + labs(x ='Natural Gas', y = 'Oil')# + geom_smooth(method = 'lm')
 
-ggplot(residuals_df)+geom_point(aes(NGas,coal)) + theme_minimal() + labs(x ='Natural Gas', y = 'Coal')# + geom_smooth(method = 'lm')
+ggplot(residuals_df)+
+  geom_point(aes(NGas,coal)) + theme_minimal() + 
+  labs(x ='Tranformed Residuals from Natural Gas', y = 'Tranformed Residuals from Coal') +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))
 ggplot()+geom_point(aes(best_model_NGas_fit_std_residuals, best_model_coal_fit_std_residuals)) + theme_minimal() + labs(x ='Natural Gas', y = 'Coal')# + geom_smooth(method = 'lm')
 
-ggplot(residuals_df)+geom_point(aes(coal,oil)) + theme_minimal() + labs(x ='Coal', y = 'Oil')# + geom_smooth(method = 'lm')
+ggplot(residuals_df)+
+  geom_point(aes(coal,oil)) + theme_minimal() + 
+  labs(x ='Tranformed Residuals from Coal', y = 'Tranformed Residuals from Oil') +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15))
 ggplot()+geom_point(aes(best_model_coal_fit_std_residuals, best_model_oil_fit_std_residuals)) + theme_minimal() + labs(x ='Coal', y = 'Oil')# + geom_smooth(method = 'lm')
 
 hist(best_model_NGas_fit_std_residuals, breaks = 50, xlab = NULL, ylab = NULL, main = NULL, axes = FALSE)
@@ -534,5 +555,16 @@ rCopula(1000,fitCopula(tCopula(dim = 3), cbind(as.numeric(pit_coal), as.numeric(
 pse_obs <- qnorm(rCopula(1000, tCopula(param = t_fit_est,dim = 3, dispstr = 'un')))
 
 qnorm(rCopula(1, indepCopula(dim = 3)))
-
-es_sample(as.vector(cbind(as.numeric(NGas_ts[[2501]]),as.numeric(coal_ts[[2501]]),as.numeric(oil_ts[[2501]]))),t(as.matrix(cbind(prob_forecast_NGas_t[[1]], prob_forecast_coal_t[[1]], prob_forecast_oil_t[[1]]))))
+es_scores_t <- numeric()
+es_scores_gauss <- numeric()
+es_scores_indep <<- numeric()
+for (i in 1:200) {
+  es_scores_t[i] <- es_sample(as.vector(cbind(as.numeric(NGas_ts[[2500+i]]),as.numeric(coal_ts[[2500+i]]),as.numeric(oil_ts[[2500+i]]))),t(as.matrix(cbind(prob_forecast_NGas_t[[i]], prob_forecast_coal_t[[i]], prob_forecast_oil_t[[i]]))))
+  es_scores_gauss[i] <- es_sample(as.vector(cbind(as.numeric(NGas_ts[[2500+i]]),as.numeric(coal_ts[[2500+i]]),as.numeric(oil_ts[[2500+i]]))),t(as.matrix(cbind(prob_forecast_NGas_normal[[i]], prob_forecast_coal_normal[[i]], prob_forecast_oil_normal[[i]]))))
+  es_scores_indep[i] <- es_sample(as.vector(cbind(as.numeric(NGas_ts[[2500+i]]),as.numeric(coal_ts[[2500+i]]),as.numeric(oil_ts[[2500+i]]))),t(as.matrix(cbind(prob_forecast_NGas_indep[[i]], prob_forecast_coal_indep[[i]], prob_forecast_oil_indep[[i]]))))
+  
+}
+mean(es_scores_t)
+mean(es_scores_gauss)
+mean(es_scores_indep)
+es_sample(as.matrix(cbind(as.numeric(unlist(NGas_ts)[2501:2700]),as.numeric(unlist(coal_ts)[2501:2700]),as.numeric(unlist(oil_ts)[2501:2700]))),t(as.matrix(cbind(unlist(prob_forecast_NGas_t)[1:200], unlist(prob_forecast_coal_t)[1:200], unlist(prob_forecast_oil_t)[1:200]))))
